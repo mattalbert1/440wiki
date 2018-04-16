@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Delete User: {{ UID }}{% endblock title %}
+
+{% block content %}
+<p>You are about to delete the account <strong>"{{ UID }}"</strong> from the wiki system. Provide the password of the account to confirm deletion.</p>
+<form class="form form-inline" method="POST">
+	{{ form.hidden_tag() }}
+	{{ form.id(placeholder='Password') }}
+	<input type="submit" class="btn btn-primary" value="Delete">
+</form>
+{% endblock content %}

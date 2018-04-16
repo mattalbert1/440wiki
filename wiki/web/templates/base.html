@@ -21,7 +21,6 @@
 								<li><a href="{{ url_for('wiki.search') }}">Search</a></li>
 								<li class="divider-vertical"></li>
 								<li><a href="{{ url_for('wiki.create') }}">New Page</a></li>
-								<li class="divider-vertical"></li>
 								<li></li>
 							</ul>
 
@@ -31,6 +30,11 @@
 								{% else %}
 									<li><a href="{{ url_for('wiki.user_logout') }}">Logout</a></li>
 								{% endif %}
+                                <li><a href="{{ url_for('wiki.user_create') }}">Create User</a></li>
+                                {% if current_user.is_authenticated %}
+                                    <li><a href="{{ url_for('wiki.user_logout') }}">Logout</a></li>
+                                    <li><a href="{{ url_for('wiki.user_delete_list') }}">Delete User</a></li>
+                                {% endif %}
 							</ul>
 						</div>
 					</div>

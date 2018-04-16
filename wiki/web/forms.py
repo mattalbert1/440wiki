@@ -9,6 +9,7 @@ from wtforms import TextAreaField
 from wtforms import PasswordField
 from wtforms.validators import InputRequired
 from wtforms.validators import ValidationError
+from wtforms.widgets import PasswordInput
 
 from wiki.core import clean_url
 from wiki.web import current_wiki
@@ -55,3 +56,17 @@ class LoginForm(Form):
             return
         if not user.check_password(field.data):
             raise ValidationError('Username and password do not match.')
+
+
+class CreateUserForm(Form):
+    name = TextField('', [InputRequired()])
+    password = TextField('', [InputRequired()])
+
+    def validate_name(form, field):
+        user = current_users.get_user(field.data)
+        if user:
+            raise ValidationError('This username is already in use.')
+
+
+class DeleteUserForm(Form):
+    id = TextField('', [InputRequired()])

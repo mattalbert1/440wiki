@@ -17,6 +17,8 @@ from wiki.core import Processor
 from wiki.web.forms import EditorForm
 from wiki.web.forms import LoginForm
 from wiki.web.forms import SearchForm
+from wiki.web.forms import CreateUserForm
+from wiki.web.forms import DeleteUserForm
 from wiki.web.forms import URLForm
 from wiki.web import current_wiki
 from wiki.web import current_users
@@ -131,13 +133,16 @@ def search():
 
 @bp.route('/user/login/', methods=['GET', 'POST'])
 def user_login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = current_users.get_user(form.name.data)
-        login_user(user)
-        user.set('authenticated', True)
-        flash('Login successful.', 'success')
-        return redirect(request.args.get("next") or url_for('wiki.index'))
+    form = LoginForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = current_users.get_user(form.name.data)
+            login_user(user)
+            user.set('authenticated', True)
+            if user.get('authenticated') is True:
+                print("User authentication worked!")
+            flash('Login successful.', 'success')
+            return redirect(request.args.get("next") or url_for('wiki.index'))
     return render_template('login.html', form=form)
 
 
@@ -155,9 +160,18 @@ def user_index():
     pass
 
 
-@bp.route('/user/create/')
+@bp.route('/user/create/', methods=['GET', 'POST'])
 def user_create():
-    pass
+    form = CreateUserForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = current_users.add_user(form.name.data, form.password.data)
+            if not user:
+                flash('Failed to create user.', 'failure')
+                return redirect(url_for('wiki.user_create'))
+            flash('Created new user!', 'success')
+            return redirect(url_for('wiki.index'))
+    return render_template('createuser.html', form=form)
 
 
 @bp.route('/user/<int:user_id>/')
@@ -165,9 +179,29 @@ def user_admin(user_id):
     pass
 
 
-@bp.route('/user/delete/<int:user_id>/')
+@bp.route('/user/delete', methods=['GET', 'POST'])
+@login_required
+def user_delete_list():
+    results = current_users.read()
+    return render_template('deletelist.html', results=results)
+
+
+
+@bp.route('/user/delete/<string:user_id>', methods=['GET', 'POST'])
+@login_required
 def user_delete(user_id):
-    pass
+    form = DeleteUserForm(request.form)
+    if request.method == 'POST':
+        usercheck = current_users.get_user(user_id)
+        if form.validate_on_submit():
+            if usercheck.get("password") == form.id.data:
+                user = current_users.delete_user(user_id)
+                if not user:
+                    flash('Failed to delete user.', 'failure')
+                    return redirect(url_for('wiki.index'))
+                flash('Successfully deleted user.', 'success')
+                return redirect(url_for('wiki.index'))
+    return render_template('deleteuser.html', form=form, UID=user_id)
 
 
 """
