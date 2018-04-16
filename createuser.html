@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Create User{% endblock title %}
+
+{% block content %}
+<p>Create a new user using the following form. Provide a username and password.</p>
+<form class="form form-inline" method="POST">
+	{{ form.hidden_tag() }}
+	{{ form.name(placeholder='Username') }}
+	{{ form.password(placeholder='Password') }}
+	<input type="submit" class="btn btn-primary" value="Create">
+</form>
+{% endblock content %}
