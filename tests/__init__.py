@@ -4,17 +4,29 @@ import shutil
 from tempfile import mkdtemp
 from tempfile import mkstemp
 from unittest import TestCase
-
+from werkzeug.local import LocalProxy
+from flask import current_app
+from flask import g
 from wiki.core import Wiki
 from wiki.web import create_app
+
 
 #: the default configuration
 CONFIGURATION = u"""
 PRIVATE=False
 TITLE='test'
 DEFAULT_SEARCH_IGNORE_CASE=False
-DEFAULT_AUTHENTICATION_METHOD='hash'
+DEFAULT_AUTHENTICATION_METHOD='cleartext'
+TESTING=True
+WTF_CSRF_ENABLED=False
+SECRET_KEY='a unique and long key'
+HISTORY_SHOW_MAX=30
+PIC_BASE = '/static/content/'
+CONTENT_DIR = '/Users/Matt/PycharmProjects/Riki/content'
+USER_DIR = '/Users/Matt/PycharmProjects/Riki/user'
 """
+# I had to add SECRET_KEY and WTF_CSRF_SECRET_KEY to configuration file so that the unit tests for
+# test_user_add_delete.py could actually access other routes of the system.
 
 
 class WikiBaseTestCase(TestCase):
@@ -37,6 +49,33 @@ class WikiBaseTestCase(TestCase):
         if not self._wiki:
             self._wiki = Wiki(self.rootdir)
         return self._wiki
+
+    """login_helper used to facilitate unit-test login attempts"""
+
+    def login_helper(self, username, password):
+        return self.app.post(
+            '/user/login/',
+            data=dict(name=username, password=password, form=""),
+            follow_redirects=True
+        )
+
+    """user_create_helper used to facilitate unit-test user creation attempts"""
+
+    def user_create_helper(self, username, password):
+        return self.app.post(
+            '/user/create/',
+            data=dict(name=username, password=password, form=""),
+            follow_redirects=True
+        )
+
+    """user_delete_helper used to facilitate unit-test user deletion attempts"""
+
+    def user_delete_helper(self, username, password):
+        return self.app.post(
+            '/user/delete/'+username,
+            data=dict(password=password, form=""),
+            follow_redirects=True
+        )
 
     @property
     def app(self):
@@ -68,7 +107,6 @@ class WikiBaseTestCase(TestCase):
             fhd.write(content)
 
         return path
-
 
     def tearDown(self):
         """
